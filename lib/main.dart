@@ -1,219 +1,108 @@
 import 'package:flutter/material.dart';
 void main() {
-  runApp(const MyApp());
-}
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'SendaConvert',
-      debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
-    );
-  }
+  runApp(MaterialApp(
+    title: 'SendaConvert',
+    debugShowCheckedModeBanner: false,
+    home: HomeScreen(),
+  ));
 }
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 class _HomeScreenState extends State<HomeScreen> {
-  String _expression = '0';
-  String _base = 'GNF';
-  final Map<String, double> _rates = {
-    'GNF': 8770,
-    'USD': 1,
-    'XOF': 590,
-    'EUR': 0.92,
-    'CDF': 2800,
+  String expr = '0';
+  String base = 'GNF';
+  Map<String, double> rates = {
+    'GNF': 8770, 'USD': 1, 'XOF': 590, 'EUR': 0.92, 'CDF': 2800
   };
-  final List<Map<String, String>> _currencies = [
+  List<Map<String, String>> currencies = [
     {'code': 'GNF', 'flag': '🇬🇳', 'name': 'Franc guineen'},
     {'code': 'USD', 'flag': '🇺🇸', 'name': 'Dollar americain'},
     {'code': 'XOF', 'flag': '🇨🇮', 'name': 'Franc CFA'},
     {'code': 'EUR', 'flag': '🇪🇺', 'name': 'Euro'},
     {'code': 'CDF', 'flag': '🇨🇩', 'name': 'Franc congolais'},
   ];
-  double get _value {
-    try {
-      return double.parse(_expression.replaceAll(',', '.'));
-    } catch (_) {
-      return 0;
-    }
+  double get val {
+    try { return double.parse(expr); } catch(_) { return 0; }
   }
-  String _convert(String to) {
-    final fromRate = _rates[_base] ?? 1;
-    final toRate = _rates[to] ?? 1;
-    final result = (_value / fromRate) * toRate;
-    if (result == result.truncateToDouble()) {
-      return result.toInt().toString();
-    }
-    return result.toStringAsFixed(2);
+  String conv(String to) {
+    double r = (val / (rates[base] ?? 1)) * (rates[to] ?? 1);
+    return r == r.truncateToDouble() ? r.toInt().toString() : r.toStringAsFixed(2);
   }
-  void _tap(String k) {
+  void tap(String k) {
     setState(() {
-      if (k == 'C') {
-        _expression = '0';
-        return;
-      }
-      if (k == 'X') {
-        if (_expression.length > 1) {
-          _expression = _expression.substring(0, _expression.length - 1);
-        } else {
-          _expression = '0';
-        }
-        return;
-      }
-      if (_expression == '0') {
-        _expression = k;
-      } else {
-        _expression = _expression + k;
-      }
+      if (k == 'C') { expr = '0'; return; }
+      if (k == '<') { expr = expr.length > 1 ? expr.substring(0, expr.length - 1) : '0'; return; }
+      expr = expr == '0' ? k : expr + k;
     });
   }
-  Widget _buildKey(String label, Color bg, Color fg) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: GestureDetector(
-          onTap: () => _tap(label),
-          child: Container(
-            height: 64,
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              label == 'X' ? '⌫' : label,
-              style: TextStyle(
-                color: fg,
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
+  Widget key(String k, Color bg) {
+    return Expanded(child: GestureDetector(
+      onTap: () => tap(k),
+      child: Container(
+        height: 60, margin: EdgeInsets.all(3),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+        alignment: Alignment.center,
+        child: Text(k, style: TextStyle(color: Colors.white, fontSize: 20)),
       ),
-    );
-  }
-  Widget _buildRow(List<String> keys) {
-    const orange = Color(0xFFF5A623);
-    const dark = Color(0xFF1A1A1E);
-    const darker = Color(0xFF242428);
-    const white = Color(0xFFF0F0F0);
-    return Row(
-      children: keys.map((k) {
-        final isOp = k == '+' || k == '-' || k == 'x' || k == '/';
-        final isFunc = k == 'C' || k == 'X';
-        final bg = isOp ? orange : isFunc ? dark : darker;
-        final fg = isOp ? Colors.white : white;
-        return _buildKey(k, bg, fg);
-      }).toList(),
-    );
+    ));
   }
   @override
   Widget build(BuildContext context) {
+    Color acc = Color(0xFFF5A623);
+    Color s1 = Color(0xFF1A1A1E);
+    Color s2 = Color(0xFF242428);
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F10),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 😎,
-              child: Row(
-                children: [
-                  RichText(
-                    text: const TextSpan(
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                      children: [
-                        TextSpan(text: 'Senda', style: TextStyle(color: Color(0xFFF0F0F0))),
-                        TextSpan(text: 'Convert', style: TextStyle(color: Color(0xFFF5A623))),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  const Text('💱', style: TextStyle(fontSize: 22)),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                children: _currencies.map((c) {
-                  final code = c['code']!;
-                  final isBase = code == _base;
-                  return GestureDetector(
-                    onTap: () => setState(() {
-                      _expression = _convert(code);
-                      _base = code;
-                    }),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1E),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isBase ? const Color(0xFFF5A623) : Colors.transparent,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(c['flag']!, style: const TextStyle(fontSize: 26)),
-                          const SizedBox(width: 12),
-                          Text(code, style: const TextStyle(color: Color(0xFFF0F0F0), fontSize: 14, fontWeight: FontWeight.w600)),
-                          const Spacer(),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                isBase ? _expression : _convert(code),
-                                style: TextStyle(
-                                  color: isBase ? const Color(0xFFF5A623) : const Color(0xFFF0F0F0),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(c['name']!, style: const TextStyle(color: Color(0xFF6A6A70), fontSize: 10)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  _expression,
-                  style: const TextStyle(color: Color(0xFFF0F0F0), fontSize: 32, fontWeight: FontWeight.w300),
+      backgroundColor: Color(0xFF0F0F10),
+      body: SafeArea(child: Column(children: [
+        Padding(padding: EdgeInsets.all(16), child: Row(children: [
+          Text('Senda', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+          Text('Convert', style: TextStyle(color: acc, fontSize: 22, fontWeight: FontWeight.bold)),
+          Spacer(),
+          Text('💱', style: TextStyle(fontSize: 22)),
+        ])),
+        Expanded(child: ListView(
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          children: currencies.map((c) {
+            bool isBase = c['code'] == base;
+            return GestureDetector(
+              onTap: () => setState(() { expr = conv(c['code']!); base = c['code']!; }),
+              child: Container(
+                margin: EdgeInsets.only(bottom: 6),
+                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: s1, borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: isBase ? acc : Colors.transparent, width: 1.5),
                 ),
+                child: Row(children: [
+                  Text(c['flag']!, style: TextStyle(fontSize: 24)),
+                  SizedBox(width: 12),
+                  Text(c['code']!, style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                  Spacer(),
+                  Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    Text(isBase ? expr : conv(c['code']!),
+                      style: TextStyle(color: isBase ? acc : Colors.white, fontSize: 20)),
+                    Text(c['name']!, style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  ]),
+                ]),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-              child: Column(
-                children: [
-                  _buildRow(['7', '8', '9', '/']),
-                  const SizedBox(height: 😎,
-                  _buildRow(['4', '5', '6', 'x']),
-                  const SizedBox(height: 😎,
-                  _buildRow(['1', '2', '3', '-']),
-                  const SizedBox(height: 😎,
-                  _buildRow(['C', '0', 'X', '+']),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+            );
+          }).toList(),
+        )),
+        Padding(padding: EdgeInsets.symmetric(horizontal: 16, vertical: 😎,
+          child: Align(alignment: Alignment.centerRight,
+            child: Text(expr, style: TextStyle(color: Colors.white, fontSize: 30)))),
+        Padding(padding: EdgeInsets.fromLTRB(12, 0, 12, 16), child: Column(children: [
+          Row(children: [key('7',s2), key('8',s2), key('9',s2), key('/',acc)]),
+          SizedBox(height: 6),
+          Row(children: [key('4',s2), key('5',s2), key('6',s2), key('x',acc)]),
+          SizedBox(height: 6),
+          Row(children: [key('1',s2), key('2',s2), key('3',s2), key('-',acc)]),
+          SizedBox(height: 6),
+          Row(children: [key('C',s1), key('0',s2), key('<',s1), key('+',acc)]),
+        ])),
+      ])),
     );
   }
-}
+} 
